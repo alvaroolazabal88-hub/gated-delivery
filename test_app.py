@@ -28,7 +28,7 @@ class HealthTests(unittest.TestCase):
             status = resp.status
             body = json.loads(resp.read())
 
-        self.assertEqual(status, 200)
+        self.assertEqual(status, 201)
         self.assertEqual(body, {"status": "ok"})
 
     def test_unknown_route_returns_404(self):
