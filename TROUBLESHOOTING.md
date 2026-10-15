@@ -152,6 +152,22 @@ The commit did not need to be redone, only the push.
 
 `gh pt create`, `git tatus`, `git --push`. Both tools print the likely command (`Did you mean this? pr`). Reading that suggestion is faster than debugging.
 
-## 13. Python version differs between the laptop and CI
+## 13. `can't open file '.../unitest'`
+
+**Symptom:** `python3 unitest` failed with `[Errno 2] No such file or directory`.
+
+**Cause:** two mistakes in one command. Without `-m`, Python treats the argument as a file name to run, not a module. And the module is spelled `unittest`, with two t's.
+
+**Fix:** `python3 -m unittest`.
+
+## 14. `src refspec ... does not match any` on push
+
+**Symptom:** `git push -u origin docs/proof-and-troubleshooting` failed with `src refspec docs/proof-and-troubleshooting does not match any`.
+
+**Cause:** the branch was created as `docs/add-proof-and-troubleshooting`. Git cannot push a branch name that does not exist locally.
+
+**Fix:** check the exact name with `git branch`, or push whatever branch is checked out with `git push -u origin HEAD`.
+
+## 15. Python version differs between the laptop and CI
 
 The laptop runs Python 3.14 and the pipeline pins 3.12. The tests pass on both, which is useful evidence that the code does not depend on a specific version. A version matrix is a future step.

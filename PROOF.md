@@ -85,11 +85,46 @@ Why 0 approvals: this is a single-person repository and GitHub does not let an a
 
 ## 5. A failing test blocks the merge
 
-**Status: pending.** To be filled in with the pull request that breaks `test_health_returns_ok` on purpose, showing:
+To prove that the check is a real gate and not decoration, I opened a pull request that breaks `test_health_returns_ok` on purpose (`200` changed to `201`). It is PR #3, branch `test/break-on-purpose`, 2026-10-14.
 
-- `gh pr checks` with `ci/test` failing,
-- the merge button disabled with "Required status check test has failed",
-- the pull request closed without merging.
+**Locally**, the test fails and the process exits with code 1:
+
+```
+AssertionError: 200 != 201
+FAILED (failures=1)
+$ echo $?
+1
+```
+
+**In CI**, the same failure shows up on the runner (run 38596566737, job time 6 s), and `gh pr checks` reports it as failing:
+
+```
+Some checks were not successful
+0 cancelled, 1 failing, 0 successful, 0 skipped, and 0 pending checks
+X  ci/test (pull_request)    6s
+```
+
+**On the pull request**, read back from the GitHub API:
+
+| Field | Value |
+|---|---|
+| `statusCheckRollup` | `test`: FAILURE |
+| `mergeable` | MERGEABLE (no code conflicts) |
+| `mergeStateStatus` | **BLOCKED** |
+
+The distinction matters: git could have merged the change cleanly, but the repository rule stopped it because the required check failed.
+
+The pull request was then closed **without merging** (closed 2026-10-14, `mergedAt: null`), so the broken test never reached `main`. `main` still has `200` on that line.
+
+Reproduce:
+
+```bash
+git switch -c test/break-on-purpose
+# change 200 to 201 in test_app.py, commit, push
+gh pr create --base main --title "Break test on purpose (do not merge)" --body "Proof."
+gh pr checks
+gh pr view --json mergeStateStatus
+```
 
 ## What this does not prove (yet)
 
